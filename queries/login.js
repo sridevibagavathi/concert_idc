@@ -1,6 +1,7 @@
 import dbo from '../services/mongodb';
 import { ObjectId } from 'mongodb';
-const collection = "concert_login"
+require("dotenv").config();
+const collection = process.env.MONGO_COLLECTION
 
 const passwordExists = async (email, password) => {
   const dbConnect = dbo.getDb();

@@ -1,13 +1,14 @@
 const res = require("express/lib/response");
 const { MongoClient } = require("mongodb");
-const connectionString = 'mongodb://localhost:27017';
+require("dotenv").config();
+const connectionString = process.env.MONGO_CONNECTION_STRING;
 const client = new MongoClient(connectionString, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
 
 let dbConnection;
-const dbName = 'concert';
+const dbName = process.env.MONGO_DB;
 client.connect((err, db) => {
     if (err || !db) {
         return res.send(err);
