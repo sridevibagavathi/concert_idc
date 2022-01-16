@@ -4,7 +4,7 @@ const createValidator = (obj) => {
     const registerParams = {
         firstName: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).required(),
         lastName: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).required(),
-        mobileNumber: Joi.number().required(),
+        mobileNumber: Joi.string().min(5).pattern(/^[0-9]+$/).required(),
         emailId: Joi.string().email().required(),
         city: Joi.string().required(),
         password: Joi.string().required(),
@@ -21,7 +21,7 @@ const updateValidator = (obj) => {
     const registerParams = {
         firstName: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).optional(),
         lastName: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).optional(),
-        mobileNumber: Joi.number().optional(),
+        mobileNumber: Joi.string().min(5).pattern(/^[0-9]+$/).optional(),
         emailId: Joi.string().email().optional(),
         city: Joi.string().optional(),
     }

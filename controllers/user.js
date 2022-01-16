@@ -7,18 +7,11 @@ import {
   update,
   archive
 } from "../queries/users";
-import { passwordExists } from "../queries/login";
 import statusCode from "../utils/httpStatusCode.json";
-import JWT from "jsonwebtoken";
-require("dotenv").config();
-const RS256_PRIVATE_KEY = process.env.RS256_PRIVATE_KEY;
-const TOKEN_EXPIRY_HOURS = process.env.JWT_TOKEN_EXPIRY_HOURS;
-import { JwtAlgorithm } from "../data/consts";
 import {
   createValidator,
   updateValidator
 } from "../validators/users"
-import loginValidator from "../validators/login"
 
 const createUser = async (req, res) => {
   try {
@@ -75,31 +68,32 @@ const updateUser = async (req, res) => {
     const validator = updateValidator(data)
     if (validator.error) return res.status(statusCode.BAD_REQUEST).send({ success: false, errorMessage: validator.error })
 
-    const [idCheck, emailCheckQuery] = await Promise.all([
-      await idExists(req.params.id),
-      await emailExists(data.emailId)
-    ]);
+    const emailCheckQuery = await emailExists(data.emailId)
+    if (req.params.id) {
+      const idCheck = await idExists(req.params.id)
+      console.log(idCheck, emailCheckQuery)
+      if (
+        (idCheck.length && !emailCheckQuery.length)
+        || (!idCheck.length && emailCheckQuery.length)
+        || (idCheck.length && emailCheckQuery.length && idCheck[0]._id.toString() != emailCheckQuery[0]._id.toString())
+      )
+        return res
+          .status(statusCode.CONFLICT)
+          .send({ sucess: false, message: `Email-id and userId conflicts` });
 
-    console.log(idCheck, emailCheckQuery)
-    if (
-      (idCheck.length && !emailCheckQuery.length)
-      || (!idCheck.length && emailCheckQuery.length)
-      || (idCheck.length && emailCheckQuery.length && idCheck[0]._id.toString() != emailCheckQuery[0]._id.toString())
-    )
-      return res
-        .status(statusCode.CONFLICT)
-        .send({ sucess: false, message: `Email-id and userId conflicts` });
-    else {
-      data.active = 1
-      data.date = new Date(Date.now())
-      const updated = await update(data, req.params.id);
-      console.log(updated.modifiedCount, updated.upsertedCount)
-      if (!updated.modifiedCount && !updated.upsertedCount)
-        return res.send({ success: false, message: `Error in updating user` });
-      return res.send({ sucess: true, message: `User updated successfully` });
+    } else {
+      if (emailCheckQuery.length)
+        return res
+          .status(statusCode.CONFLICT)
+          .send({ sucess: false, message: `Email-id exists already` });
     }
-
-
+    data.active = 1
+    data.date = new Date(Date.now())
+    const updated = await update(data, req.params.id);
+    console.log(updated.modifiedCount, updated.upsertedCount)
+    if (!updated.modifiedCount && !updated.upsertedCount)
+      return res.send({ success: false, message: `Error in updating user` });
+    return res.send({ sucess: true, message: `User updated successfully` });
   } catch (e) {
     console.log(e)
     return res
@@ -120,35 +114,4 @@ const deleteUser = async (req, res) => {
   return res.send({ sucess: true, message: `User deleted successfully` });
 };
 
-const login = async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-    const validator = loginValidator({ emailId, password })
-    if (validator.error) return res.status(statusCode.BAD_REQUEST).send({ success: false, errorMessage: validator.error })
-    const emailCheckQuery = await emailExists(emailId);
-    if (!emailCheckQuery.length)
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .send({ sucess: false, message: `Wrong credentials` });
-    const passwordCheckQuery = await passwordExists(emailId, password);
-    if (!passwordCheckQuery.length)
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .send({ sucess: false, message: `Wrong credentials` });
-    const token = JWT.sign({ emailId, password }, RS256_PRIVATE_KEY, {
-      algorithm: JwtAlgorithm,
-      expiresIn: TOKEN_EXPIRY_HOURS,
-    });
-    return res.send({
-      sucess: true,
-      token,
-      userId: emailCheckQuery[0]._id,
-      emailId,
-    });
-  } catch (e) {
-    console.log(e)
-    return res.status(statusCode.CONFLICT).send({ sucess: false, message: e });
-  }
-};
-
-export { createUser, getUsers, updateUser, deleteUser, login };
+export { createUser, getUsers, updateUser, deleteUser };

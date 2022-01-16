@@ -4,8 +4,7 @@ import controllers from "../controllers";
 
 route.post("/add", controllers.createUser);
 route.get("/get", controllers.getUsers);
-route.post("/login", controllers.login);
-route.put("/update/:id", controllers.updateUser);
+route.put("/update/:id?", controllers.updateUser);
 route.delete("/delete/:id", controllers.deleteUser);
 
 export default route;
