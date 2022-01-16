@@ -6,12 +6,12 @@ const createValidator = (obj) => {
         lastName: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).required(),
         mobileNumber: Joi.string().min(5).pattern(/^[0-9]+$/).required(),
         emailId: Joi.string().email().required(),
-        city: Joi.string().required(),
+        city: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).required(),
         password: Joi.string().required(),
     }
     const result = schemaValidation(registerParams, obj)
     if (result.hasOwnProperty('error')) {
-        return { success: false, error: result.error.details[0].message.split(':')[0].replace(/\"/g, '') }
+        return { success: false, error: result.error.details[0].message.replace(/\"/g, '') }
     } else {
         return { success: true }
     }
@@ -23,11 +23,11 @@ const updateValidator = (obj) => {
         lastName: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).optional(),
         mobileNumber: Joi.string().min(5).pattern(/^[0-9]+$/).optional(),
         emailId: Joi.string().email().optional(),
-        city: Joi.string().optional(),
+        city: Joi.string().pattern(new RegExp('^[a-zA-Z ]+$')).optional(),
     }
     const result = schemaValidation(registerParams, obj)
     if (result.hasOwnProperty('error')) {
-        return { success: false, error: result.error.details[0].message.split(':')[0].replace(/\"/g, '') }
+        return { success: false, error: result.error.details[0].message.replace(/\"/g, '') }
     } else {
         return { success: true }
     }
